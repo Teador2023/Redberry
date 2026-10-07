@@ -49,7 +49,10 @@ function App() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <div className="brand">Kino XII</div>
+        <button type="button" className="brand" onClick={() => setView('home')}>
+          <span className="brand-mark" aria-hidden="true">K</span>
+          <span>Kino <strong>XII</strong></span>
+        </button>
 
         <nav className="nav" aria-label="Main navigation">
           <button type="button" className={view === 'home' ? 'nav-button active' : 'nav-button'} onClick={() => setView('home')}>
@@ -58,38 +61,58 @@ function App() {
           <button type="button" className={view === 'sessions' ? 'nav-button active' : 'nav-button'} onClick={() => setView('sessions')}>
             Sessions
           </button>
-          <button type="button" className="nav-button">
-            Tickets
-          </button>
         </nav>
       </header>
 
       {view === 'home' ? (
-        <>
-          <section className="hero">
-            <div>
-              <p className="eyebrow">Now showing</p>
-              <h1>Redberry Bootcamp XII Cinema</h1>
-              <p className="subtitle">
-                Discover the featured films, compare showtimes, and plan the next movie night.
+        <div className="home-page">
+          <section className="hero" aria-labelledby="hero-title">
+            <div className="hero-art" aria-hidden="true" />
+            <div className="hero-copy">
+              <p className="eyebrow"><span className="live-dot" /> Featured film</p>
+              <h1 id="hero-title">{movies[0].title}</h1>
+              <p className="hero-meta">
+                {movies[0].genre}<span>•</span>{movies[0].duration}<span>•</span>{movies[0].rating}
               </p>
+              <p className="subtitle">
+                Settle in for a story worth seeing on the big screen. Find a showtime and make it a movie night.
+              </p>
+              <button type="button" className="primary-button" onClick={() => setView('sessions')}>
+                Browse sessions <span aria-hidden="true">→</span>
+              </button>
             </div>
           </section>
 
-          <section className="content-grid" aria-label="Featured movies">
-            {movies.map((movie) => (
-              <article key={movie.id} className="movie-card">
-                <div className={`movie-poster poster-${movie.accent}`} aria-hidden="true" />
-                <div className="movie-info">
-                  <h2>{movie.title}</h2>
-                  <p>
-                    {movie.genre} • {movie.duration} • {movie.rating}
-                  </p>
-                </div>
-              </article>
-            ))}
+          <section className="movies-section" aria-labelledby="movies-heading">
+            <div className="section-heading">
+              <div>
+                <p className="section-kicker">On the big screen</p>
+                <h2 id="movies-heading">Now showing</h2>
+              </div>
+              <button type="button" className="text-button" onClick={() => setView('sessions')}>
+                View sessions <span aria-hidden="true">→</span>
+              </button>
+            </div>
+
+            <div className="content-grid">
+              {movies.map((movie, index) => (
+                <article key={movie.id} className="movie-card">
+                  <div className={`movie-poster poster-${movie.accent}`} aria-hidden="true">
+                    <span className="poster-index">{String(index + 1).padStart(2, '0')}</span>
+                    <span className="poster-rating">{movie.rating}</span>
+                  </div>
+                  <div className="movie-info">
+                    <div>
+                      <h3>{movie.title}</h3>
+                      <p>{movie.genre}<span>•</span>{movie.duration}</p>
+                    </div>
+                    <span className="movie-arrow" aria-hidden="true">↗</span>
+                  </div>
+                </article>
+              ))}
+            </div>
           </section>
-        </>
+        </div>
       ) : (
         <section className="sessions-layout" aria-label="Sessions page">
           <aside className="filters-panel" aria-label="Filter options">
