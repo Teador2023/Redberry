@@ -1,0 +1,380 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #f5f5f5;
+  background: #0f172a;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0b1020 0%, #111827 100%);
+}
+
+button,
+select,
+input,
+a {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0 2rem;
+}
+
+.brand {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nav {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.nav-button {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: transparent;
+  color: #dfe7f5;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+}
+
+.nav-button.active {
+  background: #fbbf24;
+  color: #111827;
+  border-color: transparent;
+}
+
+.hero {
+  padding: 2rem 0 2.5rem;
+}
+
+.eyebrow {
+  color: #fbbf24;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  margin: 0 0 0.75rem;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1.05;
+}
+
+.subtitle {
+  max-width: 36rem;
+  margin-top: 1rem;
+  color: #cbd5e1;
+  font-size: 1.05rem;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.movie-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.movie-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(251, 191, 36, 0.5);
+}
+
+.movie-poster {
+  height: 320px;
+  background-size: cover;
+  background-position: center;
+}
+
+.poster-sunset {
+  background: linear-gradient(135deg, #f97316, #facc15);
+}
+
+.poster-ocean {
+  background: linear-gradient(135deg, #38bdf8, #a78bfa);
+}
+
+.poster-forest {
+  background: linear-gradient(135deg, #0ea5e9, #22c55e);
+}
+
+.poster-rose {
+  background: linear-gradient(135deg, #fb7185, #f59e0b);
+}
+
+.movie-info {
+  padding: 1rem 1rem 1.25rem;
+}
+
+.movie-info h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.2rem;
+}
+
+.movie-info p {
+  margin: 0;
+  color: #cbd5e1;
+}
+
+.sessions-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.filters-panel,
+.session-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 18px;
+}
+
+.filters-panel {
+  padding: 1.25rem;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.text-button {
+  color: #fbbf24;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.filter-group {
+  margin-bottom: 1.25rem;
+}
+
+.filter-label {
+  display: block;
+  margin-bottom: 0.7rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  background: rgba(30, 41, 59, 0.9);
+  color: #dbeafe;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+}
+
+.chip.active {
+  background: #fbbf24;
+  color: #111827;
+  border-color: transparent;
+}
+
+.sessions-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 1rem 1.15rem;
+}
+
+.toolbar-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.sort-control {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #dbeafe;
+}
+
+.sort-control select {
+  background: rgba(15, 23, 42, 0.8);
+  color: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+}
+
+.session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.session-card {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  overflow: hidden;
+}
+
+.session-poster {
+  min-height: 160px;
+}
+
+.session-details {
+  padding: 1rem 1.1rem;
+}
+
+.session-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.session-header-row h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.age-badge {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+  border-radius: 999px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.meta-line {
+  color: #dbeafe;
+  margin: 0.6rem 0;
+}
+
+.meta-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.meta-tags span {
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  color: #e2e8f0;
+  font-size: 0.8rem;
+}
+
+.session-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.session-footer strong {
+  font-size: 1.1rem;
+}
+
+.seat-status {
+  color: #86efac;
+}
+
+.sold-out {
+  color: #fca5a5;
+}
+
+@media (max-width: 840px) {
+  .sessions-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .app-shell {
+    width: min(100% - 1rem, 1180px);
+  }
+
+  .session-card {
+    grid-template-columns: 1fr;
+  }
+
+  .session-poster {
+    min-height: 220px;
+  }
+}
