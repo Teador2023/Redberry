@@ -1,19 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import MovieGrid from './components/MovieGrid'
+import { getFeaturedMovies, getNowPlayingMovies } from './services/movies'
+import type { Movie } from './types/movie'
 
 type View = 'home' | 'sessions'
 
-type Movie = {
-  id: number
-  title: string
-  genre: string
-  duration: string
-  rating: string
-  accent: string
-}
+type HomeContentState =
+  | { status: 'loading' }
+  | { status: 'error'; message: string }
+  | { status: 'loaded'; featuredMovie: Movie | null; nowPlayingMovies: Movie[] }
 
 type Session = {
   id: number
   movie: string
+  rating: string
   time: string
   hall: string
   format: string
@@ -22,25 +22,52 @@ type Session = {
   seatsLeft: number
 }
 
-const movies: Movie[] = [
-  { id: 1, title: 'Midnight Echo', genre: 'Thriller', duration: '2h 06m', rating: '16+', accent: 'sunset' },
-  { id: 2, title: 'Golden Hour', genre: 'Drama', duration: '1h 48m', rating: '12+', accent: 'ocean' },
-  { id: 3, title: 'Glass Horizon', genre: 'Sci‑Fi', duration: '2h 14m', rating: '18+', accent: 'forest' },
-  { id: 4, title: 'Paper Lanterns', genre: 'Adventure', duration: '1h 34m', rating: 'PG', accent: 'rose' },
-]
-
 const sessions: Session[] = [
-  { id: 1, movie: 'Midnight Echo', time: '12:00', hall: 'Hall 1', format: 'Standard', language: 'Georgian Dub', price: 24, seatsLeft: 12 },
-  { id: 2, movie: 'Midnight Echo', time: '15:30', hall: 'Hall 3', format: 'MAX', language: 'Original', price: 36, seatsLeft: 5 },
-  { id: 3, movie: 'Golden Hour', time: '14:15', hall: 'Hall 2', format: 'ATMOS', language: 'Georgian Subtitles', price: 28, seatsLeft: 18 },
-  { id: 4, movie: 'Glass Horizon', time: '19:00', hall: 'Hall 4', format: 'PANORAMA', language: 'Russian Dub', price: 32, seatsLeft: 0 },
-  { id: 5, movie: 'Paper Lanterns', time: '17:45', hall: 'Hall 1', format: 'Standard', language: 'Original', price: 22, seatsLeft: 9 },
+  { id: 1, movie: 'Midnight Echo', rating: '16+', time: '12:00', hall: 'Hall 1', format: 'Standard', language: 'Georgian Dub', price: 24, seatsLeft: 12 },
+  { id: 2, movie: 'Midnight Echo', rating: '16+', time: '15:30', hall: 'Hall 3', format: 'MAX', language: 'Original', price: 36, seatsLeft: 5 },
+  { id: 3, movie: 'Golden Hour', rating: '12+', time: '14:15', hall: 'Hall 2', format: 'ATMOS', language: 'Georgian Subtitles', price: 28, seatsLeft: 18 },
+  { id: 4, movie: 'Glass Horizon', rating: '18+', time: '19:00', hall: 'Hall 4', format: 'PANORAMA', language: 'Russian Dub', price: 32, seatsLeft: 0 },
+  { id: 5, movie: 'Paper Lanterns', rating: 'PG', time: '17:45', hall: 'Hall 1', format: 'Standard', language: 'Original', price: 22, seatsLeft: 9 },
 ]
 
 const filters = ['Venue', 'Date', 'Format', 'Language', 'Time of Day']
 
 function App() {
   const [view, setView] = useState<View>('home')
+  const [homeContent, setHomeContent] = useState<HomeContentState>({ status: 'loading' })
+
+  useEffect(() => {
+    let isCurrent = true
+
+    async function loadHomeContent() {
+      try {
+        const [featuredMovies, nowPlayingMovies] = await Promise.all([
+          getFeaturedMovies(),
+          getNowPlayingMovies(),
+        ])
+
+        if (isCurrent) {
+          setHomeContent({
+            status: 'loaded',
+            featuredMovie: featuredMovies[0] ?? null,
+            nowPlayingMovies,
+          })
+        }
+      } catch (error) {
+        if (isCurrent) {
+          setHomeContent({
+            status: 'error',
+            message: error instanceof Error ? error.message : 'Unable to load movies. Please try again.',
+          })
+        }
+      }
+    }
+
+    void loadHomeContent()
+    return () => {
+      isCurrent = false
+    }
+  }, [])
 
   const activeSessions = useMemo(() => {
     return sessions.filter((session) => session.seatsLeft > 0)
@@ -67,16 +94,36 @@ function App() {
       {view === 'home' ? (
         <div className="home-page">
           <section className="hero" aria-labelledby="hero-title">
-            <div className="hero-art" aria-hidden="true" />
+            <div className="hero-art" aria-hidden="true">
+              {homeContent.status === 'loaded' && homeContent.featuredMovie?.backdropUrl && (
+                <img src={homeContent.featuredMovie.backdropUrl} alt="" />
+              )}
+            </div>
             <div className="hero-copy">
               <p className="eyebrow"><span className="live-dot" /> Featured film</p>
-              <h1 id="hero-title">{movies[0].title}</h1>
-              <p className="hero-meta">
-                {movies[0].genre}<span>•</span>{movies[0].duration}<span>•</span>{movies[0].rating}
-              </p>
-              <p className="subtitle">
-                Settle in for a story worth seeing on the big screen. Find a showtime and make it a movie night.
-              </p>
+              <h1 id="hero-title">
+                {homeContent.status === 'loading'
+                  ? 'Finding your next film'
+                  : homeContent.status === 'error'
+                    ? 'Featured film unavailable'
+                    : homeContent.featuredMovie?.title ?? 'Coming soon'}
+              </h1>
+              {homeContent.status === 'loaded' && homeContent.featuredMovie && (
+                <>
+                  <p className="hero-meta">
+                    {homeContent.featuredMovie.genres.map((genre) => genre.name).join(', ')}
+                    {homeContent.featuredMovie.runtimeMinutes !== null && (
+                      <><span>•</span>{homeContent.featuredMovie.runtimeMinutes} min</>
+                    )}
+                    {homeContent.featuredMovie.ageRating && (
+                      <><span>•</span>{homeContent.featuredMovie.ageRating.code}</>
+                    )}
+                  </p>
+                  <p className="subtitle">
+                    Find a showtime for {homeContent.featuredMovie.title} and make it a movie night.
+                  </p>
+                </>
+              )}
               <button type="button" className="primary-button" onClick={() => setView('sessions')}>
                 Browse sessions <span aria-hidden="true">→</span>
               </button>
@@ -94,23 +141,18 @@ function App() {
               </button>
             </div>
 
-            <div className="content-grid">
-              {movies.map((movie, index) => (
-                <article key={movie.id} className="movie-card">
-                  <div className={`movie-poster poster-${movie.accent}`} aria-hidden="true">
-                    <span className="poster-index">{String(index + 1).padStart(2, '0')}</span>
-                    <span className="poster-rating">{movie.rating}</span>
-                  </div>
-                  <div className="movie-info">
-                    <div>
-                      <h3>{movie.title}</h3>
-                      <p>{movie.genre}<span>•</span>{movie.duration}</p>
-                    </div>
-                    <span className="movie-arrow" aria-hidden="true">↗</span>
-                  </div>
-                </article>
-              ))}
-            </div>
+            {homeContent.status === 'loading' && (
+              <p className="load-state" role="status">Loading films…</p>
+            )}
+            {homeContent.status === 'error' && (
+              <p className="load-state error-state" role="alert">{homeContent.message}</p>
+            )}
+            {homeContent.status === 'loaded' && homeContent.nowPlayingMovies.length === 0 && (
+              <p className="load-state">No films are currently showing.</p>
+            )}
+            {homeContent.status === 'loaded' && homeContent.nowPlayingMovies.length > 0 && (
+              <MovieGrid movies={homeContent.nowPlayingMovies} />
+            )}
           </section>
         </div>
       ) : (
@@ -155,7 +197,7 @@ function App() {
                   <div className="session-details">
                     <div className="session-header-row">
                       <h3>{session.movie}</h3>
-                      <span className="age-badge">{movies.find((movie) => movie.title === session.movie)?.rating ?? 'PG'}</span>
+                      <span className="age-badge">{session.rating}</span>
                     </div>
 
                     <p className="meta-line">{session.time} • {session.hall}</p>
