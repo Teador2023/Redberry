@@ -5,11 +5,21 @@ type ComingSoonCardProps = {
   movie: Movie
   token: string | null
   onSelectMovie: (movie: Movie) => void
+  isSaved: boolean
+  onToggleSaved: (movie: Movie) => void
   onSignIn: () => void
   onNotify: (movie: Movie) => Promise<void>
 }
 
-function ComingSoonCard({ movie, token, onSelectMovie, onSignIn, onNotify }: ComingSoonCardProps) {
+function ComingSoonCard({
+  movie,
+  token,
+  isSaved,
+  onSelectMovie,
+  onToggleSaved,
+  onSignIn,
+  onNotify,
+}: ComingSoonCardProps) {
   const [subscribed, setSubscribed] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -61,6 +71,15 @@ function ComingSoonCard({ movie, token, onSelectMovie, onSignIn, onNotify }: Com
         </div>
       </button>
       <div className="coming-soon-actions">
+        <button
+          type="button"
+          className={isSaved ? 'watchlist-button saved' : 'watchlist-button'}
+          aria-label={`${isSaved ? 'Remove' : 'Add'} ${movie.title} ${isSaved ? 'from' : 'to'} your watchlist`}
+          aria-pressed={isSaved}
+          onClick={() => onToggleSaved(movie)}
+        >
+          {isSaved ? 'Saved to watchlist' : 'Add to watchlist'}
+        </button>
         <button
           type="button"
           className={subscribed ? 'notify-button subscribed' : 'notify-button'}

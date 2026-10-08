@@ -7,6 +7,7 @@ import MovieGrid from './components/MovieGrid'
 import MovieSearch from './components/MovieSearch'
 import SessionsPage from './components/SessionsPage'
 import { getCurrentUser } from './services/booking'
+import { getSavedMovies, saveMovies } from './services/watchlist'
 import {
   getComingSoonMovies,
   getFeaturedMovies,
@@ -19,7 +20,8 @@ import type { User } from './types/booking'
 import type { Movie, MovieDetails } from './types/movie'
 import type { Session } from './types/session'
 
-type View = 'home' | 'sessions' | 'account' | 'details' | 'not-found'
+type View = 'home' | 'sessions' | 'account' | 'watchlist' | 'details' | 'not-found'
+type DetailsFrom = 'home' | 'sessions' | 'watchlist'
 
 type HomeContentState =
   | { status: 'loading' }
@@ -47,6 +49,7 @@ function readRoute(): Route {
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
   if (path === '/sessions') return { view: 'sessions', movieSlug: null }
   if (path === '/account') return { view: 'account', movieSlug: null }
+  if (path === '/watchlist') return { view: 'watchlist', movieSlug: null }
 
   const movieMatch = path.match(/^\/movies\/([^/]+)\/?$/)
   if (movieMatch) {
@@ -60,15 +63,20 @@ function readRoute(): Route {
   return path === '/' ? { view: 'home', movieSlug: null } : { view: 'not-found', movieSlug: null }
 }
 
+function readDetailsFrom(): DetailsFrom {
+  const fromPath = window.history.state?.fromPath
+  if (fromPath === '/sessions') return 'sessions'
+  if (fromPath === '/watchlist') return 'watchlist'
+  return 'home'
+}
+
 function App() {
   const [initialRoute] = useState(readRoute)
   const [view, setView] = useState<View>(initialRoute.view)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [selectedMovieSlug, setSelectedMovieSlug] = useState<string | null>(initialRoute.movieSlug)
   const [selectedMovieMetadata, setSelectedMovieMetadata] = useState<MovieDetails | null>(null)
-  const [detailsFrom, setDetailsFrom] = useState<'home' | 'sessions'>(() => (
-    window.history.state?.fromPath === '/sessions' ? 'sessions' : 'home'
-  ))
+  const [detailsFrom, setDetailsFrom] = useState<DetailsFrom>(readDetailsFrom)
   const [selectedBooking, setSelectedBooking] = useState<{ movie: Movie; session: Session } | null>(null)
   const [homeContent, setHomeContent] = useState<HomeContentState>({ status: 'loading' })
   const [comingSoon, setComingSoon] = useState<ComingSoonState>({ status: 'loading' })
@@ -76,6 +84,22 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchAttempt, setSearchAttempt] = useState(0)
   const [searchState, setSearchState] = useState<SearchState>({ status: 'idle' })
+  const [watchlistState, setWatchlistState] = useState<{
+    movies: Movie[]
+    error: string | null
+    loaded: boolean
+  }>(() => {
+    try {
+      return { movies: getSavedMovies(), error: null, loaded: true }
+    } catch (error) {
+      return {
+        movies: [],
+        error: error instanceof Error ? error.message : 'Could not load saved films.',
+        loaded: true,
+      }
+    }
+  })
+  const savedMovieSlugs = new Set(watchlistState.movies.map((movie) => movie.slug))
 
   useEffect(() => {
     const routeMetadata: Record<Exclude<View, 'details'>, { title: string; description: string }> = {
@@ -90,6 +114,10 @@ function App() {
       account: {
         title: 'My account | Kino XII',
         description: 'Sign in or manage your Kino XII profile, tickets, and bookings.',
+      },
+      watchlist: {
+        title: 'My watchlist | Kino XII',
+        description: 'Your saved films at Kino XII. Keep track of movies you want to see.',
       },
       'not-found': {
         title: 'Page not found | Kino XII',
@@ -233,12 +261,30 @@ function App() {
     setSearchAttempt((attempt) => attempt + 1)
   }
 
+  function toggleSavedMovie(movie: Movie): void {
+    if (!watchlistState.loaded) return
+    const movies = savedMovieSlugs.has(movie.slug)
+      ? watchlistState.movies.filter((savedMovie) => savedMovie.slug !== movie.slug)
+      : [movie, ...watchlistState.movies]
+
+    try {
+      saveMovies(movies)
+      setWatchlistState({ movies, error: null, loaded: true })
+    } catch (error) {
+      setWatchlistState((current) => ({
+        ...current,
+        error: error instanceof Error ? error.message : 'Could not update saved films.',
+      }))
+    }
+  }
+
   function openMovie(movie: Movie): void {
-    const from = view === 'sessions' ? 'sessions' : 'home'
+    const from: DetailsFrom = view === 'sessions' ? 'sessions' : view === 'watchlist' ? 'watchlist' : 'home'
     setDetailsFrom(from)
     setSelectedMovieMetadata(null)
     setSelectedMovieSlug(movie.slug)
-    window.history.pushState({ fromPath: from === 'sessions' ? '/sessions' : '/' }, '', `/movies/${encodeURIComponent(movie.slug)}`)
+    const fromPath = from === 'sessions' ? '/sessions' : from === 'watchlist' ? '/watchlist' : '/'
+    window.history.pushState({ fromPath }, '', `/movies/${encodeURIComponent(movie.slug)}`)
     setView('details')
   }
 
@@ -249,6 +295,8 @@ function App() {
       window.history.pushState({}, '', '/sessions')
     } else if (nextView === 'account' && window.location.pathname !== '/account') {
       window.history.pushState({}, '', '/account')
+    } else if (nextView === 'watchlist' && window.location.pathname !== '/watchlist') {
+      window.history.pushState({}, '', '/watchlist')
     }
     if (nextView !== 'details') {
       setSelectedMovieSlug(null)
@@ -259,11 +307,11 @@ function App() {
 
   function returnFromDetails(): void {
     const fromPath = window.history.state?.fromPath
-    if (fromPath === '/' || fromPath === '/sessions') {
+    if (fromPath === '/' || fromPath === '/sessions' || fromPath === '/watchlist') {
       window.history.back()
       return
     }
-    navigateTo(detailsFrom === 'sessions' ? 'sessions' : 'home')
+    navigateTo(detailsFrom)
   }
 
   useEffect(() => {
@@ -273,7 +321,7 @@ function App() {
       setSelectedMovieSlug(route.movieSlug)
       setSelectedMovieMetadata(null)
       if (route.view === 'details') {
-        setDetailsFrom(window.history.state?.fromPath === '/sessions' ? 'sessions' : 'home')
+        setDetailsFrom(readDetailsFrom())
       }
     }
 
@@ -300,12 +348,39 @@ function App() {
           <button type="button" className={view === 'account' ? 'nav-button active' : 'nav-button'} onClick={() => navigateTo('account')}>
             {currentUser ? 'My account' : 'Sign in'}
           </button>
+          <button type="button" className={view === 'watchlist' || (view === 'details' && detailsFrom === 'watchlist') ? 'nav-button active' : 'nav-button'} onClick={() => navigateTo('watchlist')}>
+            Watchlist{watchlistState.movies.length > 0 ? ` (${watchlistState.movies.length})` : ''}
+          </button>
         </nav>
       </header>
 
       <main id="main-content" tabIndex={-1}>
+      {watchlistState.error && (
+        <p className="load-state error-state" role="alert">{watchlistState.error}</p>
+      )}
       {view === 'account' ? (
         <AccountPage key={currentUser?.id ?? 'guest'} user={currentUser} onUserChange={handleUserChange} />
+      ) : view === 'watchlist' ? (
+        <section className="movies-section watchlist-page" aria-labelledby="watchlist-heading">
+          <div className="section-heading">
+            <div>
+              <p className="section-kicker">Your saved films</p>
+              <h1 id="watchlist-heading">Watchlist</h1>
+            </div>
+          </div>
+          {!watchlistState.loaded ? (
+            <p className="load-state" role="status">Loading your watchlist…</p>
+          ) : watchlistState.movies.length === 0 ? (
+            <p className="load-state">Your watchlist is empty. Save films from the catalogue to keep them here.</p>
+          ) : (
+            <MovieGrid
+              movies={watchlistState.movies}
+              onSelectMovie={openMovie}
+              savedMovieSlugs={savedMovieSlugs}
+              onToggleSaved={toggleSavedMovie}
+            />
+          )}
+        </section>
       ) : view === 'home' ? (
         <div className="home-page">
           <section className="hero" aria-labelledby="hero-title">
@@ -371,6 +446,8 @@ function App() {
               <MovieGrid
                 movies={homeContent.nowPlayingMovies}
                 onSelectMovie={openMovie}
+                savedMovieSlugs={savedMovieSlugs}
+                onToggleSaved={toggleSavedMovie}
               />
             )}
             {normalizedSearchQuery && (
@@ -401,6 +478,8 @@ function App() {
                     <MovieGrid
                       movies={searchState.movies}
                       onSelectMovie={openMovie}
+                      savedMovieSlugs={savedMovieSlugs}
+                      onToggleSaved={toggleSavedMovie}
                     />
                 )}
                 {(searchState.status === 'idle' || searchState.query !== normalizedSearchQuery) && (
@@ -443,7 +522,9 @@ function App() {
                       key={movie.id}
                       movie={movie}
                       token={sessionStorage.getItem('kino-auth-token')}
+                      isSaved={savedMovieSlugs.has(movie.slug)}
                       onSelectMovie={openMovie}
+                      onToggleSaved={toggleSavedMovie}
                       onSignIn={() => navigateTo('account')}
                       onNotify={async (selectedMovie) => {
                         const token = sessionStorage.getItem('kino-auth-token')
@@ -473,6 +554,8 @@ function App() {
         <MovieDetailsPage
           slug={selectedMovieSlug}
           onDetailsLoaded={setSelectedMovieMetadata}
+          isSaved={savedMovieSlugs.has(selectedMovieSlug)}
+          onToggleSaved={toggleSavedMovie}
           onBack={returnFromDetails}
           onBrowseSessions={() => navigateTo('sessions')}
         />

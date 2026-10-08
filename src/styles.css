@@ -388,9 +388,36 @@ img {
 
 .movie-card-action:focus-visible,
 .back-button:focus-visible,
-.secondary-button:focus-visible {
+.secondary-button:focus-visible,
+.watchlist-button:focus-visible {
   outline: 2px solid #ff684b;
   outline-offset: 3px;
+}
+
+.watchlist-button {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  background: #171a25;
+  color: #e5e5e9;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.movie-card > .watchlist-button {
+  width: calc(100% - 1.8rem);
+  margin: 0 0.9rem 0.9rem;
+}
+
+.watchlist-button:hover {
+  border-color: #ff684b;
+}
+
+.watchlist-button.saved {
+  border-color: rgba(90, 185, 130, 0.4);
+  background: rgba(90, 185, 130, 0.08);
+  color: #9ae6b4;
 }
 
 .movie-poster {
@@ -511,6 +538,8 @@ img {
 }
 
 .coming-soon-actions {
+  display: grid;
+  gap: 0.6rem;
   padding: 0 0.9rem 0.9rem;
 }
 

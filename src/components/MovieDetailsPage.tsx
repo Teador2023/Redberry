@@ -5,6 +5,8 @@ import type { MovieDetails } from '../types/movie'
 type MovieDetailsPageProps = {
   slug: string
   onDetailsLoaded: (movie: MovieDetails) => void
+  isSaved: boolean
+  onToggleSaved: (movie: MovieDetails) => void
   onBack: () => void
   onBrowseSessions: () => void
 }
@@ -31,7 +33,14 @@ function formatDate(date: string): string {
   }).format(new Date(`${date}T00:00:00`))
 }
 
-function MovieDetailsPage({ slug, onDetailsLoaded, onBack, onBrowseSessions }: MovieDetailsPageProps) {
+function MovieDetailsPage({
+  slug,
+  onDetailsLoaded,
+  isSaved,
+  onToggleSaved,
+  onBack,
+  onBrowseSessions,
+}: MovieDetailsPageProps) {
   const [details, setDetails] = useState<DetailsState>({ status: 'loading' })
   const [retryCount, setRetryCount] = useState(0)
 
@@ -119,6 +128,15 @@ function MovieDetailsPage({ slug, onDetailsLoaded, onBack, onBrowseSessions }: M
           </p>
           {movie.synopsis && <p className="details-synopsis">{movie.synopsis}</p>}
           <div className="details-actions">
+            <button
+              type="button"
+              className={isSaved ? 'secondary-button watchlist-button saved' : 'secondary-button watchlist-button'}
+              aria-label={`${isSaved ? 'Remove' : 'Add'} ${movie.title} ${isSaved ? 'from' : 'to'} your watchlist`}
+              aria-pressed={isSaved}
+              onClick={() => onToggleSaved(movie)}
+            >
+              {isSaved ? 'Saved to watchlist' : 'Add to watchlist'}
+            </button>
             {!movie.isComingSoon && (
               <button type="button" className="primary-button" onClick={onBrowseSessions}>
                 Browse sessions <span aria-hidden="true">→</span>

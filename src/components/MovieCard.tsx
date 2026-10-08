@@ -3,6 +3,8 @@ import type { Movie } from '../types/movie'
 type MovieCardProps = {
   movie: Movie
   onSelect: (movie: Movie) => void
+  isSaved: boolean
+  onToggleSaved: (movie: Movie) => void
 }
 
 function formatRuntime(runtimeMinutes: number | null): string {
@@ -15,7 +17,7 @@ function formatRuntime(runtimeMinutes: number | null): string {
   return hours > 0 ? `${hours}h ${String(minutes).padStart(2, '0')}m` : `${minutes}m`
 }
 
-function MovieCard({ movie, onSelect }: MovieCardProps) {
+function MovieCard({ movie, onSelect, isSaved, onToggleSaved }: MovieCardProps) {
   return (
     <article className="movie-card">
       <button
@@ -43,6 +45,15 @@ function MovieCard({ movie, onSelect }: MovieCardProps) {
           </div>
           <span className="movie-arrow" aria-hidden="true">↗</span>
         </div>
+      </button>
+      <button
+        type="button"
+        className={isSaved ? 'watchlist-button saved' : 'watchlist-button'}
+        aria-label={`${isSaved ? 'Remove' : 'Add'} ${movie.title} ${isSaved ? 'from' : 'to'} your watchlist`}
+        aria-pressed={isSaved}
+        onClick={() => onToggleSaved(movie)}
+      >
+        {isSaved ? 'Saved to watchlist' : 'Add to watchlist'}
       </button>
     </article>
   )
