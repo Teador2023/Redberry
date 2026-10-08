@@ -37,14 +37,36 @@ type ComingSoonState =
   | { status: 'error'; message: string }
   | { status: 'loaded'; movies: Movie[] }
 
+type Route = {
+  view: View
+  movieSlug: string | null
+}
+
+function readRoute(): Route {
+  const path = window.location.pathname
+  if (path === '/sessions') return { view: 'sessions', movieSlug: null }
+  if (path === '/account') return { view: 'account', movieSlug: null }
+
+  const movieMatch = path.match(/^\/movies\/([^/]+)\/?$/)
+  if (movieMatch) {
+    try {
+      const movieSlug = decodeURIComponent(movieMatch[1])
+      if (movieSlug) return { view: 'details', movieSlug }
+    } catch {
+      return { view: 'home', movieSlug: null }
+    }
+  }
+  return { view: 'home', movieSlug: null }
+}
+
 function App() {
-  const [view, setView] = useState<View>(
-    window.location.pathname === '/sessions'
-      ? 'sessions'
-      : window.location.pathname === '/account' ? 'account' : 'home',
-  )
+  const [initialRoute] = useState(readRoute)
+  const [view, setView] = useState<View>(initialRoute.view)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const [selectedMovieSlug, setSelectedMovieSlug] = useState<string | null>(null)
+  const [selectedMovieSlug, setSelectedMovieSlug] = useState<string | null>(initialRoute.movieSlug)
+  const [detailsFrom, setDetailsFrom] = useState<'home' | 'sessions'>(() => (
+    window.history.state?.fromPath === '/sessions' ? 'sessions' : 'home'
+  ))
   const [selectedBooking, setSelectedBooking] = useState<{ movie: Movie; session: Session } | null>(null)
   const [homeContent, setHomeContent] = useState<HomeContentState>({ status: 'loading' })
   const [comingSoon, setComingSoon] = useState<ComingSoonState>({ status: 'loading' })
@@ -176,6 +198,14 @@ function App() {
     setSearchAttempt((attempt) => attempt + 1)
   }
 
+  function openMovie(movie: Movie): void {
+    const from = view === 'sessions' ? 'sessions' : 'home'
+    setDetailsFrom(from)
+    setSelectedMovieSlug(movie.slug)
+    window.history.pushState({ fromPath: from === 'sessions' ? '/sessions' : '/' }, '', `/movies/${encodeURIComponent(movie.slug)}`)
+    setView('details')
+  }
+
   function navigateTo(nextView: View): void {
     if (nextView === 'home') {
       window.history.pushState({}, '', '/')
@@ -184,16 +214,29 @@ function App() {
     } else if (nextView === 'account' && window.location.pathname !== '/account') {
       window.history.pushState({}, '', '/account')
     }
+    if (nextView !== 'details') {
+      setSelectedMovieSlug(null)
+    }
     setView(nextView)
+  }
+
+  function returnFromDetails(): void {
+    const fromPath = window.history.state?.fromPath
+    if (fromPath === '/' || fromPath === '/sessions') {
+      window.history.back()
+      return
+    }
+    navigateTo(detailsFrom === 'sessions' ? 'sessions' : 'home')
   }
 
   useEffect(() => {
     function handlePopState() {
-      setView(
-        window.location.pathname === '/sessions'
-          ? 'sessions'
-          : window.location.pathname === '/account' ? 'account' : 'home',
-      )
+      const route = readRoute()
+      setView(route.view)
+      setSelectedMovieSlug(route.movieSlug)
+      if (route.view === 'details') {
+        setDetailsFrom(window.history.state?.fromPath === '/sessions' ? 'sessions' : 'home')
+      }
     }
 
     window.addEventListener('popstate', handlePopState)
@@ -209,10 +252,10 @@ function App() {
         </button>
 
         <nav className="nav" aria-label="Main navigation">
-          <button type="button" className={view === 'home' || (view === 'details' && window.location.pathname !== '/sessions') ? 'nav-button active' : 'nav-button'} onClick={() => navigateTo('home')}>
+          <button type="button" className={view === 'home' || (view === 'details' && detailsFrom === 'home') ? 'nav-button active' : 'nav-button'} onClick={() => navigateTo('home')}>
             Home
           </button>
-          <button type="button" className={window.location.pathname === '/sessions' ? 'nav-button active' : 'nav-button'} onClick={() => navigateTo('sessions')}>
+          <button type="button" className={view === 'sessions' || (view === 'details' && detailsFrom === 'sessions') ? 'nav-button active' : 'nav-button'} onClick={() => navigateTo('sessions')}>
             Sessions
           </button>
           <button type="button" className={view === 'account' ? 'nav-button active' : 'nav-button'} onClick={() => navigateTo('account')}>
@@ -287,10 +330,7 @@ function App() {
             {!normalizedSearchQuery && homeContent.status === 'loaded' && homeContent.nowPlayingMovies.length > 0 && (
               <MovieGrid
                 movies={homeContent.nowPlayingMovies}
-                onSelectMovie={(movie) => {
-                  setSelectedMovieSlug(movie.slug)
-                  setView('details')
-                }}
+                onSelectMovie={openMovie}
               />
             )}
             {normalizedSearchQuery && (
@@ -320,10 +360,7 @@ function App() {
                   && searchState.movies.length > 0 && (
                     <MovieGrid
                       movies={searchState.movies}
-                      onSelectMovie={(movie) => {
-                        setSelectedMovieSlug(movie.slug)
-                        setView('details')
-                      }}
+                      onSelectMovie={openMovie}
                     />
                 )}
                 {(searchState.status === 'idle' || searchState.query !== normalizedSearchQuery) && (
@@ -366,10 +403,7 @@ function App() {
                       key={movie.id}
                       movie={movie}
                       token={sessionStorage.getItem('kino-auth-token')}
-                      onSelectMovie={(selectedMovie) => {
-                        setSelectedMovieSlug(selectedMovie.slug)
-                        setView('details')
-                      }}
+                      onSelectMovie={openMovie}
                       onSignIn={() => navigateTo('account')}
                       onNotify={async (selectedMovie) => {
                         const token = sessionStorage.getItem('kino-auth-token')
@@ -398,21 +432,12 @@ function App() {
       ) : view === 'details' && selectedMovieSlug ? (
         <MovieDetailsPage
           slug={selectedMovieSlug}
-          onBack={() => {
-            if (window.location.pathname === '/sessions') {
-              setView('sessions')
-            } else {
-              navigateTo('home')
-            }
-          }}
+          onBack={returnFromDetails}
           onBrowseSessions={() => navigateTo('sessions')}
         />
       ) : (
         <SessionsPage
-          onSelectMovie={(movie) => {
-            setSelectedMovieSlug(movie.slug)
-            setView('details')
-          }}
+          onSelectMovie={openMovie}
           onSelectSession={(movie, session) => setSelectedBooking({ movie, session })}
         />
       )}
