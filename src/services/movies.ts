@@ -1,4 +1,5 @@
 import type { Movie, MovieDetails } from '../types/movie'
+import { ApiError } from '../types/booking'
 
 const API_BASE_URL = 'https://api.kinoxii.redberryinternship.ge/api'
 
@@ -29,9 +30,39 @@ export function getNowPlayingMovies(): Promise<Movie[]> {
   return fetchMovies('/movies/now-playing')
 }
 
+export function getComingSoonMovies(): Promise<Movie[]> {
+  return fetchMovies('/movies/coming-soon')
+}
+
 export function searchMovies(query: string): Promise<Movie[]> {
   const parameters = new URLSearchParams({ q: query })
   return fetchMovies(`/search?${parameters}`)
+}
+
+export async function subscribeToMovieNotifications(
+  slug: string,
+  token: string,
+): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/movies/${encodeURIComponent(slug)}/notify`,
+    {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+  if (!response.ok) {
+    let message = `Could not subscribe to notifications (${response.status}). Please try again.`
+    try {
+      const result: { message?: string } = await response.json()
+      if (result.message) message = result.message
+    } catch {
+      // Keep the status-based message when the server did not return JSON.
+    }
+    throw new ApiError(message, response.status)
+  }
 }
 
 export async function getMovieDetails(slug: string): Promise<MovieDetails> {

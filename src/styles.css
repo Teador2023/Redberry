@@ -477,6 +477,54 @@ img {
   font-size: 0.85rem;
 }
 
+.coming-soon-badge {
+  position: relative;
+  z-index: 1;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 3px;
+  background: rgba(8, 10, 19, 0.78);
+  color: #ffc1a4;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.coming-soon-actions {
+  padding: 0 0.9rem 0.9rem;
+}
+
+.notify-button {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(244, 81, 50, 0.6);
+  border-radius: 4px;
+  background: rgba(244, 81, 50, 0.1);
+  color: #ff9279;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.notify-button:hover:not(:disabled) {
+  background: #f45132;
+  color: #fff;
+}
+
+.notify-button.subscribed {
+  border-color: rgba(90, 185, 130, 0.4);
+  background: rgba(90, 185, 130, 0.08);
+  color: #9ae6b4;
+}
+
+.notify-button:disabled {
+  cursor: default;
+}
+
+.notify-error {
+  margin: 0.5rem 0 0;
+  color: #ff8a72;
+  font-size: 0.76rem;
+}
+
 .load-state {
   margin: 0;
   padding: 1.25rem;

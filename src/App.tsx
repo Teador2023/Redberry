@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import AccountPage from './components/AccountPage'
 import BookingDialog from './components/BookingDialog'
+import ComingSoonCard from './components/ComingSoonCard'
 import MovieDetailsPage from './components/MovieDetailsPage'
 import MovieGrid from './components/MovieGrid'
 import MovieSearch from './components/MovieSearch'
 import SessionsPage from './components/SessionsPage'
 import { getCurrentUser } from './services/booking'
-import { getFeaturedMovies, getNowPlayingMovies, searchMovies } from './services/movies'
+import {
+  getComingSoonMovies,
+  getFeaturedMovies,
+  getNowPlayingMovies,
+  searchMovies,
+  subscribeToMovieNotifications,
+} from './services/movies'
 import { ApiError } from './types/booking'
 import type { User } from './types/booking'
 import type { Movie } from './types/movie'
@@ -25,6 +32,11 @@ type SearchState =
   | { status: 'error'; query: string; message: string }
   | { status: 'loaded'; query: string; movies: Movie[] }
 
+type ComingSoonState =
+  | { status: 'loading' }
+  | { status: 'error'; message: string }
+  | { status: 'loaded'; movies: Movie[] }
+
 function App() {
   const [view, setView] = useState<View>(
     window.location.pathname === '/sessions'
@@ -35,6 +47,8 @@ function App() {
   const [selectedMovieSlug, setSelectedMovieSlug] = useState<string | null>(null)
   const [selectedBooking, setSelectedBooking] = useState<{ movie: Movie; session: Session } | null>(null)
   const [homeContent, setHomeContent] = useState<HomeContentState>({ status: 'loading' })
+  const [comingSoon, setComingSoon] = useState<ComingSoonState>({ status: 'loading' })
+  const [comingSoonAttempt, setComingSoonAttempt] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchAttempt, setSearchAttempt] = useState(0)
   const [searchState, setSearchState] = useState<SearchState>({ status: 'idle' })
@@ -64,6 +78,26 @@ function App() {
       isCurrent = false
     }
   }, [])
+
+  useEffect(() => {
+    let isCurrent = true
+    getComingSoonMovies()
+      .then((movies) => {
+        if (isCurrent) setComingSoon({ status: 'loaded', movies })
+      })
+      .catch((error: unknown) => {
+        if (isCurrent) {
+          setComingSoon({
+            status: 'error',
+            message: error instanceof Error ? error.message : 'Unable to load coming soon films.',
+          })
+        }
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [comingSoonAttempt])
 
   useEffect(() => {
     let isCurrent = true
@@ -298,6 +332,68 @@ function App() {
               </div>
             )}
           </section>
+
+          {!normalizedSearchQuery && (
+            <section className="movies-section coming-soon-section" aria-labelledby="coming-soon-heading">
+              <div className="section-heading">
+                <div>
+                  <p className="section-kicker">The next big thing</p>
+                  <h2 id="coming-soon-heading">Coming soon</h2>
+                </div>
+              </div>
+              {comingSoon.status === 'loading' && (
+                <p className="load-state" role="status">Loading upcoming films…</p>
+              )}
+              {comingSoon.status === 'error' && (
+                <div className="search-error" role="alert">
+                  <p>{comingSoon.message}</p>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => setComingSoonAttempt((attempt) => attempt + 1)}
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
+              {comingSoon.status === 'loaded' && comingSoon.movies.length === 0 && (
+                <p className="load-state">No upcoming films have been announced yet.</p>
+              )}
+              {comingSoon.status === 'loaded' && comingSoon.movies.length > 0 && (
+                <div className="content-grid">
+                  {comingSoon.movies.map((movie) => (
+                    <ComingSoonCard
+                      key={movie.id}
+                      movie={movie}
+                      token={sessionStorage.getItem('kino-auth-token')}
+                      onSelectMovie={(selectedMovie) => {
+                        setSelectedMovieSlug(selectedMovie.slug)
+                        setView('details')
+                      }}
+                      onSignIn={() => navigateTo('account')}
+                      onNotify={async (selectedMovie) => {
+                        const token = sessionStorage.getItem('kino-auth-token')
+                        if (!token) {
+                          navigateTo('account')
+                          throw new Error('Sign in to get notified when this film opens.')
+                        }
+                        try {
+                          await subscribeToMovieNotifications(selectedMovie.slug, token)
+                        } catch (error) {
+                          if (error instanceof ApiError && error.status === 401) {
+                            sessionStorage.removeItem('kino-auth-token')
+                            handleUserChange(null)
+                            navigateTo('account')
+                          }
+                          throw error
+                        }
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
         </div>
       ) : view === 'details' && selectedMovieSlug ? (
         <MovieDetailsPage

@@ -122,7 +122,7 @@ function MovieDetailsPage({ slug, onBack, onBrowseSessions }: MovieDetailsPagePr
                 Browse sessions <span aria-hidden="true">→</span>
               </button>
             )}
-            {movie.fromPrice !== null && (
+            {!movie.isComingSoon && movie.fromPrice !== null && (
               <p className="details-price">Tickets from <strong>₾{movie.fromPrice}</strong></p>
             )}
           </div>
