@@ -339,6 +339,48 @@ img {
   outline: 0;
 }
 
+.genre-filter {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.genre-filter-label {
+  flex: 0 0 auto;
+  padding-top: 0.45rem;
+  color: #b5b8c3;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.genre-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.genre-filter-button {
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: #11131d;
+  color: #c4c6ce;
+  font-size: 0.78rem;
+}
+
+.genre-filter-button:hover,
+.genre-filter-button.active {
+  border-color: #f45132;
+  background: rgba(244, 81, 50, 0.12);
+  color: #ff9279;
+}
+
+.genre-filter-button:focus-visible {
+  outline: 2px solid #ff684b;
+  outline-offset: 2px;
+}
+
 .clear-search {
   display: grid;
   place-items: center;

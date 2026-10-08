@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import AccountPage from './components/AccountPage'
 import BookingDialog from './components/BookingDialog'
 import ComingSoonCard from './components/ComingSoonCard'
+import GenreFilter from './components/GenreFilter'
 import MovieDetailsPage from './components/MovieDetailsPage'
 import MovieGrid from './components/MovieGrid'
 import MovieSearch from './components/MovieSearch'
@@ -84,6 +85,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchAttempt, setSearchAttempt] = useState(0)
   const [searchState, setSearchState] = useState<SearchState>({ status: 'idle' })
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null)
   const [watchlistState, setWatchlistState] = useState<{
     movies: Movie[]
     error: string | null
@@ -100,6 +102,16 @@ function App() {
     }
   })
   const savedMovieSlugs = new Set(watchlistState.movies.map((movie) => movie.slug))
+  const catalogueMovies = [
+    ...(homeContent.status === 'loaded' ? homeContent.nowPlayingMovies : []),
+    ...(comingSoon.status === 'loaded' ? comingSoon.movies : []),
+  ]
+  const availableGenres = Array.from(
+    new Map(catalogueMovies.flatMap((movie) => movie.genres).map((genre) => [genre.slug, genre])).values(),
+  ).sort((first, second) => first.name.localeCompare(second.name))
+  const filterBySelectedGenre = (movies: Movie[]) => selectedGenre
+    ? movies.filter((movie) => movie.genres.some((genre) => genre.slug === selectedGenre))
+    : movies
 
   useEffect(() => {
     const routeMetadata: Record<Exclude<View, 'details'>, { title: string; description: string }> = {
@@ -432,6 +444,11 @@ function App() {
             </div>
 
             <MovieSearch query={searchQuery} onQueryChange={handleSearchQueryChange} />
+            <GenreFilter
+              genres={availableGenres}
+              selectedGenre={selectedGenre}
+              onSelectGenre={setSelectedGenre}
+            />
 
             {!normalizedSearchQuery && homeContent.status === 'loading' && (
               <p className="load-state" role="status">Loading films…</p>
@@ -443,12 +460,16 @@ function App() {
               <p className="load-state">No films are currently showing.</p>
             )}
             {!normalizedSearchQuery && homeContent.status === 'loaded' && homeContent.nowPlayingMovies.length > 0 && (
-              <MovieGrid
-                movies={homeContent.nowPlayingMovies}
-                onSelectMovie={openMovie}
-                savedMovieSlugs={savedMovieSlugs}
-                onToggleSaved={toggleSavedMovie}
-              />
+              filterBySelectedGenre(homeContent.nowPlayingMovies).length === 0 ? (
+                <p className="load-state">No currently showing films match this genre. Choose another genre or select All genres.</p>
+              ) : (
+                <MovieGrid
+                  movies={filterBySelectedGenre(homeContent.nowPlayingMovies)}
+                  onSelectMovie={openMovie}
+                  savedMovieSlugs={savedMovieSlugs}
+                  onToggleSaved={toggleSavedMovie}
+                />
+              )
             )}
             {normalizedSearchQuery && (
               <div aria-live="polite">
@@ -475,12 +496,16 @@ function App() {
                 )}
                 {searchState.status === 'loaded' && searchState.query === normalizedSearchQuery
                   && searchState.movies.length > 0 && (
-                    <MovieGrid
-                      movies={searchState.movies}
-                      onSelectMovie={openMovie}
-                      savedMovieSlugs={savedMovieSlugs}
-                      onToggleSaved={toggleSavedMovie}
-                    />
+                    filterBySelectedGenre(searchState.movies).length === 0 ? (
+                      <p className="load-state">No search results match both “{normalizedSearchQuery}” and this genre. Choose another genre or select All genres.</p>
+                    ) : (
+                      <MovieGrid
+                        movies={filterBySelectedGenre(searchState.movies)}
+                        onSelectMovie={openMovie}
+                        savedMovieSlugs={savedMovieSlugs}
+                        onToggleSaved={toggleSavedMovie}
+                      />
+                    )
                 )}
                 {(searchState.status === 'idle' || searchState.query !== normalizedSearchQuery) && (
                   <p className="load-state" role="status">Searching films…</p>
