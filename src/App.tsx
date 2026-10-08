@@ -16,7 +16,7 @@ import {
 } from './services/movies'
 import { ApiError } from './types/booking'
 import type { User } from './types/booking'
-import type { Movie } from './types/movie'
+import type { Movie, MovieDetails } from './types/movie'
 import type { Session } from './types/session'
 
 type View = 'home' | 'sessions' | 'account' | 'details'
@@ -64,6 +64,7 @@ function App() {
   const [view, setView] = useState<View>(initialRoute.view)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [selectedMovieSlug, setSelectedMovieSlug] = useState<string | null>(initialRoute.movieSlug)
+  const [selectedMovieMetadata, setSelectedMovieMetadata] = useState<MovieDetails | null>(null)
   const [detailsFrom, setDetailsFrom] = useState<'home' | 'sessions'>(() => (
     window.history.state?.fromPath === '/sessions' ? 'sessions' : 'home'
   ))
@@ -74,6 +75,35 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchAttempt, setSearchAttempt] = useState(0)
   const [searchState, setSearchState] = useState<SearchState>({ status: 'idle' })
+
+  useEffect(() => {
+    const routeMetadata: Record<Exclude<View, 'details'>, { title: string; description: string }> = {
+      home: {
+        title: 'Kino XII | Movies and showtimes',
+        description: 'Discover films now showing and coming soon at Kino XII. Explore movies and find your next cinema session.',
+      },
+      sessions: {
+        title: 'Sessions | Kino XII',
+        description: 'Browse movie sessions at Kino XII. Find a screening by date, movie, and showtime.',
+      },
+      account: {
+        title: 'My account | Kino XII',
+        description: 'Sign in or manage your Kino XII profile, tickets, and bookings.',
+      },
+    }
+    const metadata = view === 'details' && selectedMovieMetadata
+      ? {
+          title: `${selectedMovieMetadata.title} | Kino XII`,
+          description: selectedMovieMetadata.synopsis
+            ?? `View ${selectedMovieMetadata.title} movie details and ${selectedMovieMetadata.isComingSoon ? 'coming soon updates' : 'showtimes'} at Kino XII.`,
+        }
+      : view === 'details'
+        ? { title: 'Movie details | Kino XII', description: 'Movie details, showtimes, and information from Kino XII.' }
+        : routeMetadata[view]
+
+    document.title = metadata.title
+    document.querySelector('meta[name="description"]')?.setAttribute('content', metadata.description)
+  }, [view, selectedMovieMetadata])
 
   const handleUserChange = useCallback((user: User | null) => {
     setCurrentUser(user)
@@ -201,6 +231,7 @@ function App() {
   function openMovie(movie: Movie): void {
     const from = view === 'sessions' ? 'sessions' : 'home'
     setDetailsFrom(from)
+    setSelectedMovieMetadata(null)
     setSelectedMovieSlug(movie.slug)
     window.history.pushState({ fromPath: from === 'sessions' ? '/sessions' : '/' }, '', `/movies/${encodeURIComponent(movie.slug)}`)
     setView('details')
@@ -216,6 +247,7 @@ function App() {
     }
     if (nextView !== 'details') {
       setSelectedMovieSlug(null)
+      setSelectedMovieMetadata(null)
     }
     setView(nextView)
   }
@@ -234,6 +266,7 @@ function App() {
       const route = readRoute()
       setView(route.view)
       setSelectedMovieSlug(route.movieSlug)
+      setSelectedMovieMetadata(null)
       if (route.view === 'details') {
         setDetailsFrom(window.history.state?.fromPath === '/sessions' ? 'sessions' : 'home')
       }
@@ -432,6 +465,7 @@ function App() {
       ) : view === 'details' && selectedMovieSlug ? (
         <MovieDetailsPage
           slug={selectedMovieSlug}
+          onDetailsLoaded={setSelectedMovieMetadata}
           onBack={returnFromDetails}
           onBrowseSessions={() => navigateTo('sessions')}
         />

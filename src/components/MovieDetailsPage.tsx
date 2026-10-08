@@ -4,6 +4,7 @@ import type { MovieDetails } from '../types/movie'
 
 type MovieDetailsPageProps = {
   slug: string
+  onDetailsLoaded: (movie: MovieDetails) => void
   onBack: () => void
   onBrowseSessions: () => void
 }
@@ -30,7 +31,7 @@ function formatDate(date: string): string {
   }).format(new Date(`${date}T00:00:00`))
 }
 
-function MovieDetailsPage({ slug, onBack, onBrowseSessions }: MovieDetailsPageProps) {
+function MovieDetailsPage({ slug, onDetailsLoaded, onBack, onBrowseSessions }: MovieDetailsPageProps) {
   const [details, setDetails] = useState<DetailsState>({ status: 'loading' })
   const [retryCount, setRetryCount] = useState(0)
 
@@ -44,6 +45,7 @@ function MovieDetailsPage({ slug, onBack, onBrowseSessions }: MovieDetailsPagePr
         const movie = await getMovieDetails(slug)
         if (isCurrent) {
           setDetails({ status: 'loaded', movie })
+          onDetailsLoaded(movie)
         }
       } catch (error) {
         if (isCurrent) {
@@ -59,7 +61,7 @@ function MovieDetailsPage({ slug, onBack, onBrowseSessions }: MovieDetailsPagePr
     return () => {
       isCurrent = false
     }
-  }, [slug, retryCount])
+  }, [slug, retryCount, onDetailsLoaded])
 
   if (details.status === 'loading') {
     return (
