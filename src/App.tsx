@@ -46,6 +46,22 @@ type Route = {
   movieSlug: string | null
 }
 
+type CatalogueRouteState = {
+  search: string
+  genre: string | null
+  sort: MovieSort
+}
+
+function readCatalogueRouteState(): CatalogueRouteState {
+  const parameters = new URLSearchParams(window.location.search)
+  const sort = parameters.get('sort')
+  return {
+    search: parameters.get('q') ?? '',
+    genre: parameters.get('genre') || null,
+    sort: sort === 'title' || sort === 'runtime' ? sort : 'featured',
+  }
+}
+
 function readRoute(): Route {
   const pathname = window.location.pathname
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
@@ -74,6 +90,7 @@ function readDetailsFrom(): DetailsFrom {
 
 function App() {
   const [initialRoute] = useState(readRoute)
+  const [initialCatalogueState] = useState(readCatalogueRouteState)
   const [view, setView] = useState<View>(initialRoute.view)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [selectedMovieSlug, setSelectedMovieSlug] = useState<string | null>(initialRoute.movieSlug)
@@ -83,11 +100,11 @@ function App() {
   const [homeContent, setHomeContent] = useState<HomeContentState>({ status: 'loading' })
   const [comingSoon, setComingSoon] = useState<ComingSoonState>({ status: 'loading' })
   const [comingSoonAttempt, setComingSoonAttempt] = useState(0)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState(initialCatalogueState.search)
   const [searchAttempt, setSearchAttempt] = useState(0)
   const [searchState, setSearchState] = useState<SearchState>({ status: 'idle' })
-  const [selectedGenre, setSelectedGenre] = useState<string | null>(null)
-  const [movieSort, setMovieSort] = useState<MovieSort>('featured')
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(initialCatalogueState.genre)
+  const [movieSort, setMovieSort] = useState<MovieSort>(initialCatalogueState.sort)
   const [watchlistState, setWatchlistState] = useState<{
     movies: Movie[]
     error: string | null
@@ -163,6 +180,21 @@ function App() {
     document.title = metadata.title
     document.querySelector('meta[name="description"]')?.setAttribute('content', metadata.description)
   }, [view, selectedMovieMetadata])
+
+  useEffect(() => {
+    if (view !== 'home') return
+
+    const parameters = new URLSearchParams()
+    if (searchQuery.trim()) parameters.set('q', searchQuery.trim())
+    if (selectedGenre) parameters.set('genre', selectedGenre)
+    if (movieSort !== 'featured') parameters.set('sort', movieSort)
+    const query = parameters.toString()
+    const nextUrl = query ? `/?${query}` : '/'
+    const currentUrl = `${window.location.pathname}${window.location.search}`
+    if (currentUrl !== nextUrl) {
+      window.history.replaceState(window.history.state, '', nextUrl)
+    }
+  }, [view, searchQuery, selectedGenre, movieSort])
 
   const handleUserChange = useCallback((user: User | null) => {
     setCurrentUser(user)
@@ -346,6 +378,12 @@ function App() {
       setView(route.view)
       setSelectedMovieSlug(route.movieSlug)
       setSelectedMovieMetadata(null)
+      if (route.view === 'home') {
+        const catalogueState = readCatalogueRouteState()
+        setSearchQuery(catalogueState.search)
+        setSelectedGenre(catalogueState.genre)
+        setMovieSort(catalogueState.sort)
+      }
       if (route.view === 'details') {
         setDetailsFrom(readDetailsFrom())
       }
