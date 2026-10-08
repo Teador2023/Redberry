@@ -1,9 +1,13 @@
-import type { Movie } from '../types/movie'
+import type { Movie, MovieDetails } from '../types/movie'
 
 const API_BASE_URL = 'https://api.kinoxii.redberryinternship.ge/api'
 
 type MovieResponse = {
   data: Movie[]
+}
+
+type MovieDetailsResponse = {
+  data: MovieDetails
 }
 
 async function fetchMovies(endpoint: string): Promise<Movie[]> {
@@ -23,4 +27,15 @@ export function getFeaturedMovies(): Promise<Movie[]> {
 
 export function getNowPlayingMovies(): Promise<Movie[]> {
   return fetchMovies('/movies/now-playing')
+}
+
+export async function getMovieDetails(slug: string): Promise<MovieDetails> {
+  const response = await fetch(`${API_BASE_URL}/movies/${encodeURIComponent(slug)}`)
+
+  if (!response.ok) {
+    throw new Error(`Could not load movie details (${response.status}). Please try again.`)
+  }
+
+  const result: MovieDetailsResponse = await response.json()
+  return result.data
 }

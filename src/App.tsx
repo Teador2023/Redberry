@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import MovieDetailsPage from './components/MovieDetailsPage'
 import MovieGrid from './components/MovieGrid'
 import { getFeaturedMovies, getNowPlayingMovies } from './services/movies'
 import type { Movie } from './types/movie'
 
-type View = 'home' | 'sessions'
+type View = 'home' | 'sessions' | 'details'
 
 type HomeContentState =
   | { status: 'loading' }
@@ -34,6 +35,7 @@ const filters = ['Venue', 'Date', 'Format', 'Language', 'Time of Day']
 
 function App() {
   const [view, setView] = useState<View>('home')
+  const [selectedMovieSlug, setSelectedMovieSlug] = useState<string | null>(null)
   const [homeContent, setHomeContent] = useState<HomeContentState>({ status: 'loading' })
 
   useEffect(() => {
@@ -82,7 +84,7 @@ function App() {
         </button>
 
         <nav className="nav" aria-label="Main navigation">
-          <button type="button" className={view === 'home' ? 'nav-button active' : 'nav-button'} onClick={() => setView('home')}>
+          <button type="button" className={view !== 'sessions' ? 'nav-button active' : 'nav-button'} onClick={() => setView('home')}>
             Home
           </button>
           <button type="button" className={view === 'sessions' ? 'nav-button active' : 'nav-button'} onClick={() => setView('sessions')}>
@@ -151,10 +153,22 @@ function App() {
               <p className="load-state">No films are currently showing.</p>
             )}
             {homeContent.status === 'loaded' && homeContent.nowPlayingMovies.length > 0 && (
-              <MovieGrid movies={homeContent.nowPlayingMovies} />
+              <MovieGrid
+                movies={homeContent.nowPlayingMovies}
+                onSelectMovie={(movie) => {
+                  setSelectedMovieSlug(movie.slug)
+                  setView('details')
+                }}
+              />
             )}
           </section>
         </div>
+      ) : view === 'details' && selectedMovieSlug ? (
+        <MovieDetailsPage
+          slug={selectedMovieSlug}
+          onBack={() => setView('home')}
+          onBrowseSessions={() => setView('sessions')}
+        />
       ) : (
         <section className="sessions-layout" aria-label="Sessions page">
           <aside className="filters-panel" aria-label="Filter options">
