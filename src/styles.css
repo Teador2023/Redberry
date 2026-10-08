@@ -763,6 +763,16 @@ img {
   gap: 1rem;
 }
 
+.share-feedback {
+  margin: 0.75rem 0 0;
+  color: #9ae6b4;
+  font-size: 0.85rem;
+}
+
+.share-feedback.error-state {
+  color: #ff8a72;
+}
+
 .details-price {
   margin: 0;
   color: #c0c2cb;

@@ -16,6 +16,11 @@ type DetailsState =
   | { status: 'error'; message: string }
   | { status: 'loaded'; movie: MovieDetails }
 
+type ShareState =
+  | { status: 'idle' }
+  | { status: 'copied'; slug: string }
+  | { status: 'error'; slug: string; message: string }
+
 function formatRuntime(runtimeMinutes: number | null): string {
   if (runtimeMinutes === null) {
     return 'Runtime unavailable'
@@ -43,6 +48,7 @@ function MovieDetailsPage({
 }: MovieDetailsPageProps) {
   const [details, setDetails] = useState<DetailsState>({ status: 'loading' })
   const [retryCount, setRetryCount] = useState(0)
+  const [shareState, setShareState] = useState<ShareState>({ status: 'idle' })
 
   useEffect(() => {
     let isCurrent = true
@@ -71,6 +77,28 @@ function MovieDetailsPage({
       isCurrent = false
     }
   }, [slug, retryCount, onDetailsLoaded])
+
+  async function shareMovie(): Promise<void> {
+    if (!navigator.clipboard?.writeText) {
+      setShareState({
+        status: 'error',
+        slug,
+        message: 'Your browser does not support copying links. You can copy the movie URL from the address bar.',
+      })
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setShareState({ status: 'copied', slug })
+    } catch {
+      setShareState({
+        status: 'error',
+        slug,
+        message: 'Could not copy the movie link. You can copy it from the address bar instead.',
+      })
+    }
+  }
 
   if (details.status === 'loading') {
     return (
@@ -137,6 +165,9 @@ function MovieDetailsPage({
             >
               {isSaved ? 'Saved to watchlist' : 'Add to watchlist'}
             </button>
+            <button type="button" className="secondary-button share-movie-button" onClick={() => void shareMovie()}>
+              Share film
+            </button>
             {!movie.isComingSoon && (
               <button type="button" className="primary-button" onClick={onBrowseSessions}>
                 Browse sessions <span aria-hidden="true">→</span>
@@ -146,6 +177,17 @@ function MovieDetailsPage({
               <p className="details-price">Tickets from <strong>₾{movie.fromPrice}</strong></p>
             )}
           </div>
+          {shareState.status !== 'idle' && shareState.slug === slug && (
+            <p
+              className={shareState.status === 'error' ? 'share-feedback error-state' : 'share-feedback'}
+              role={shareState.status === 'error' ? 'alert' : 'status'}
+              aria-live={shareState.status === 'error' ? 'assertive' : 'polite'}
+            >
+              {shareState.status === 'copied'
+                ? 'Film link copied to clipboard.'
+                : shareState.message}
+            </p>
+          )}
         </div>
       </section>
 
