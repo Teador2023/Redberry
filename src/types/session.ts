@@ -23,6 +23,18 @@ export type SessionFilterOptions = {
   languages: { id: number; slug: string; name: string; code: string }[]
   timeBands: { id: string; label: string }[]
   sorts: { id: string; label: string }[]
+  ticketTypes: TicketType[]
+  maxSeatsPerOrder: number
+  holdMinutes: number
+}
+
+export type TicketType = {
+  id: number
+  slug: 'adult' | 'child' | 'student'
+  name: string
+  priceRatio: number
+  note: string | null
+  blockedFromRatingAge: number | null
 }
 
 export type Session = {
@@ -55,4 +67,26 @@ export type SessionsResponse = {
     totalMovies: number
     date: string
   }
+}
+
+export type Seat = {
+  id: number
+  code: string
+  label: string
+  state: 'available' | 'sold' | 'held' | 'unavailable'
+  aisleAfter: boolean
+  isMine: boolean
+}
+
+export type SeatMap = {
+  sessionId: number
+  hall: {
+    id: number
+    name: string
+    venue: { id: number; slug: string; name: string; city: string }
+  }
+  sections: {
+    name: string
+    rows: { label: string; seats: Seat[] }[]
+  }[]
 }

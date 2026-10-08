@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import BookingDialog from './components/BookingDialog'
 import MovieDetailsPage from './components/MovieDetailsPage'
 import MovieGrid from './components/MovieGrid'
 import MovieSearch from './components/MovieSearch'
 import SessionsPage from './components/SessionsPage'
 import { getFeaturedMovies, getNowPlayingMovies, searchMovies } from './services/movies'
 import type { Movie } from './types/movie'
+import type { Session } from './types/session'
 
 type View = 'home' | 'sessions' | 'details'
 
@@ -24,6 +26,7 @@ function App() {
     window.location.pathname === '/sessions' ? 'sessions' : 'home',
   )
   const [selectedMovieSlug, setSelectedMovieSlug] = useState<string | null>(null)
+  const [selectedBooking, setSelectedBooking] = useState<{ movie: Movie; session: Session } | null>(null)
   const [homeContent, setHomeContent] = useState<HomeContentState>({ status: 'loading' })
   const [searchQuery, setSearchQuery] = useState('')
   const [searchAttempt, setSearchAttempt] = useState(0)
@@ -270,6 +273,15 @@ function App() {
             setSelectedMovieSlug(movie.slug)
             setView('details')
           }}
+          onSelectSession={(movie, session) => setSelectedBooking({ movie, session })}
+        />
+      )}
+      {selectedBooking && (
+        <BookingDialog
+          key={selectedBooking.session.id}
+          movie={selectedBooking.movie}
+          session={selectedBooking.session}
+          onClose={() => setSelectedBooking(null)}
         />
       )}
     </main>

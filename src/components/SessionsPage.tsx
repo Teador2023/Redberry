@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getSessionFilterOptions, getSessions } from '../services/sessions'
 import type { Movie } from '../types/movie'
-import type { SessionFilterOptions, SessionFilters, SessionsResponse } from '../types/session'
+import type { Session, SessionFilterOptions, SessionFilters, SessionsResponse } from '../types/session'
 
 type SessionsPageProps = {
   onSelectMovie: (movie: Movie) => void
+  onSelectSession: (movie: Movie, session: Session) => void
 }
 
 type LoadState<T> =
@@ -71,7 +72,7 @@ function formatDate(date: string): string {
   }).format(new Date(`${date}T00:00:00`))
 }
 
-function SessionsPage({ onSelectMovie }: SessionsPageProps) {
+function SessionsPage({ onSelectMovie, onSelectSession }: SessionsPageProps) {
   const [filters, setFilters] = useState<SessionFilters>(readFiltersFromUrl)
   const [filterOptions, setFilterOptions] = useState<LoadState<SessionFilterOptions>>({ status: 'loading' })
   const [sessions, setSessions] = useState<LoadState<SessionsResponse>>({ status: 'loading' })
@@ -370,12 +371,13 @@ function SessionsPage({ onSelectMovie }: SessionsPageProps) {
                     <p className="session-movie-genres">{group.movie.genres.map((genre) => genre.name).join(', ')}</p>
                     <div className="showtime-list">
                       {group.sessions.map((session) => (
-                        <div
+                        <button
+                          type="button"
                           className={session.isSoldOut ? 'showtime-option showtime-sold-out' : 'showtime-option'}
                           key={session.id}
-                          role="group"
-                          aria-disabled={session.isSoldOut}
+                          disabled={session.isSoldOut}
                           aria-label={`${session.time}, ${session.venue.name}, Hall ${session.hall.name}, ${session.format.name}, ${session.language.name}, ${session.isSoldOut ? 'sold out' : `${session.seatsLeft} seats left`}`}
+                          onClick={() => onSelectSession(group.movie, session)}
                         >
                           <span className="showtime-time">{session.time}</span>
                           <span>{session.venue.name}</span>
@@ -386,7 +388,7 @@ function SessionsPage({ onSelectMovie }: SessionsPageProps) {
                           <span className={session.isSoldOut ? 'sold-out' : 'seat-status'}>
                             {session.isSoldOut ? 'Sold out' : `${session.seatsLeft} seats`}
                           </span>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
