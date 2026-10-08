@@ -19,7 +19,7 @@ import type { User } from './types/booking'
 import type { Movie, MovieDetails } from './types/movie'
 import type { Session } from './types/session'
 
-type View = 'home' | 'sessions' | 'account' | 'details'
+type View = 'home' | 'sessions' | 'account' | 'details' | 'not-found'
 
 type HomeContentState =
   | { status: 'loading' }
@@ -43,7 +43,8 @@ type Route = {
 }
 
 function readRoute(): Route {
-  const path = window.location.pathname
+  const pathname = window.location.pathname
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
   if (path === '/sessions') return { view: 'sessions', movieSlug: null }
   if (path === '/account') return { view: 'account', movieSlug: null }
 
@@ -53,10 +54,10 @@ function readRoute(): Route {
       const movieSlug = decodeURIComponent(movieMatch[1])
       if (movieSlug) return { view: 'details', movieSlug }
     } catch {
-      return { view: 'home', movieSlug: null }
+      return { view: 'not-found', movieSlug: null }
     }
   }
-  return { view: 'home', movieSlug: null }
+  return path === '/' ? { view: 'home', movieSlug: null } : { view: 'not-found', movieSlug: null }
 }
 
 function App() {
@@ -89,6 +90,10 @@ function App() {
       account: {
         title: 'My account | Kino XII',
         description: 'Sign in or manage your Kino XII profile, tickets, and bookings.',
+      },
+      'not-found': {
+        title: 'Page not found | Kino XII',
+        description: 'The page you are looking for could not be found. Explore movies and sessions at Kino XII.',
       },
     }
     const metadata = view === 'details' && selectedMovieMetadata
@@ -469,6 +474,15 @@ function App() {
           onBack={returnFromDetails}
           onBrowseSessions={() => navigateTo('sessions')}
         />
+      ) : view === 'not-found' ? (
+        <section className="details-state not-found-page" aria-labelledby="not-found-title">
+          <p className="eyebrow">404 — Page not found</p>
+          <h1 id="not-found-title">This page isn’t on the programme</h1>
+          <p>We couldn’t find the page you requested. Head back to the cinema to discover films and showtimes.</p>
+          <button type="button" className="primary-button" onClick={() => navigateTo('home')}>
+            Back to home <span aria-hidden="true">→</span>
+          </button>
+        </section>
       ) : (
         <SessionsPage
           onSelectMovie={openMovie}
