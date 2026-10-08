@@ -29,6 +29,11 @@ export function getNowPlayingMovies(): Promise<Movie[]> {
   return fetchMovies('/movies/now-playing')
 }
 
+export function searchMovies(query: string): Promise<Movie[]> {
+  const parameters = new URLSearchParams({ q: query })
+  return fetchMovies(`/search?${parameters}`)
+}
+
 export async function getMovieDetails(slug: string): Promise<MovieDetails> {
   const response = await fetch(`${API_BASE_URL}/movies/${encodeURIComponent(slug)}`)
 
