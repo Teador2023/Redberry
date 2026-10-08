@@ -610,8 +610,11 @@ function App() {
                 <p className="load-state">No upcoming films have been announced yet.</p>
               )}
               {comingSoon.status === 'loaded' && comingSoon.movies.length > 0 && (
-                <div className="content-grid">
-                  {comingSoon.movies.map((movie) => (
+                filterAndSortMovies(comingSoon.movies).length === 0 ? (
+                  <p className="load-state">No upcoming films match this genre. Choose another genre or select All genres.</p>
+                ) : (
+                  <div className="content-grid">
+                  {filterAndSortMovies(comingSoon.movies).map((movie) => (
                     <ComingSoonCard
                       key={movie.id}
                       movie={movie}
@@ -639,7 +642,8 @@ function App() {
                       }}
                     />
                   ))}
-                </div>
+                  </div>
+                )
               )}
             </section>
           )}
