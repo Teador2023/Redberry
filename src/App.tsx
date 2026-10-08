@@ -282,7 +282,8 @@ function App() {
   }, [])
 
   return (
-    <main className="app-shell">
+    <div className="app-shell">
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="topbar">
         <button type="button" className="brand" onClick={() => navigateTo('home')}>
           <span className="brand-mark" aria-hidden="true">K</span>
@@ -302,6 +303,7 @@ function App() {
         </nav>
       </header>
 
+      <main id="main-content" tabIndex={-1}>
       {view === 'account' ? (
         <AccountPage key={currentUser?.id ?? 'guest'} user={currentUser} onUserChange={handleUserChange} />
       ) : view === 'home' ? (
@@ -489,6 +491,7 @@ function App() {
           onSelectSession={(movie, session) => setSelectedBooking({ movie, session })}
         />
       )}
+      </main>
       {selectedBooking && (
         <BookingDialog
           key={selectedBooking.session.id}
@@ -498,7 +501,7 @@ function App() {
           onClose={() => setSelectedBooking(null)}
         />
       )}
-    </main>
+    </div>
   )
 }
 

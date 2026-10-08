@@ -46,6 +46,27 @@ img {
   padding: 0 0 4rem;
 }
 
+.skip-link {
+  position: fixed;
+  z-index: 20;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.7rem 1rem;
+  transform: translateY(calc(-100% - 1rem));
+  border-radius: 4px;
+  background: #f45132;
+  color: #fff;
+  font-weight: 700;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+#main-content:focus {
+  outline: none;
+}
+
 .topbar {
   display: flex;
   align-items: center;
