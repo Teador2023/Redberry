@@ -20,6 +20,7 @@ import type { Seat, SeatMap, Session, SessionFilterOptions, TicketType } from '.
 type BookingDialogProps = {
   movie: Movie
   session: Session
+  onUserChange: (user: User | null) => void
   onClose: () => void
 }
 
@@ -60,7 +61,7 @@ function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError
 }
 
-function BookingDialog({ movie, session, onClose }: BookingDialogProps) {
+function BookingDialog({ movie, session, onUserChange, onClose }: BookingDialogProps) {
   const [stage, setStage] = useState<Stage>('seats')
   const [authMode, setAuthMode] = useState<AuthMode>('login')
   const [authReturn, setAuthReturn] = useState<'hold' | 'checkout'>('hold')
@@ -118,6 +119,7 @@ function BookingDialog({ movie, session, onClose }: BookingDialogProps) {
             }
             sessionStorage.removeItem(TOKEN_STORAGE_KEY)
             activeToken = null
+            onUserChange(null)
           }
         }
         if (!isCurrent) return
@@ -169,7 +171,7 @@ function BookingDialog({ movie, session, onClose }: BookingDialogProps) {
     return () => {
       isCurrent = false
     }
-  }, [loadRetry, session.id])
+  }, [loadRetry, onUserChange, session.id])
 
   const allowedTicketTypes = useMemo(() => {
     if (!options) return []
@@ -263,6 +265,7 @@ function BookingDialog({ movie, session, onClose }: BookingDialogProps) {
         sessionStorage.removeItem(TOKEN_STORAGE_KEY)
         setToken(null)
         setUser(null)
+        onUserChange(null)
         setAuthReturn('hold')
         setStage('auth')
         setMessage('Please sign in again to reserve these seats.')
@@ -307,6 +310,7 @@ function BookingDialog({ movie, session, onClose }: BookingDialogProps) {
     sessionStorage.setItem(TOKEN_STORAGE_KEY, result.token)
     setToken(result.token)
     setUser(result.user)
+    onUserChange(result.user)
     setMessage('')
     setFieldErrors({})
     setContactForm((current) => ({
@@ -415,6 +419,7 @@ function BookingDialog({ movie, session, onClose }: BookingDialogProps) {
         sessionStorage.removeItem(TOKEN_STORAGE_KEY)
         setToken(null)
         setUser(null)
+        onUserChange(null)
         setAuthReturn('checkout')
         setStage('auth')
         setMessage('Please sign in again. Your seat hold is still active.')

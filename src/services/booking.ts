@@ -94,6 +94,10 @@ export async function getCurrentUser(token: string): Promise<User> {
   return result.data
 }
 
+export async function logout(token: string): Promise<void> {
+  await request<unknown>('/logout', { method: 'POST', token })
+}
+
 export async function updateProfile(
   token: string,
   profile: { fullName: string; mobileNumber: string; dateOfBirth: string },
@@ -144,6 +148,22 @@ export async function createOrder(
     method: 'POST',
     token,
     body: order,
+  })
+  return result.data
+}
+
+export async function getTickets(
+  token: string,
+  filter: 'upcoming' | 'past',
+): Promise<BookingOrder[]> {
+  const result = await request<ApiEnvelope<BookingOrder[]>>(`/tickets?filter=${filter}`, { token })
+  return result.data
+}
+
+export async function refundOrder(token: string, orderReference: string): Promise<BookingOrder> {
+  const result = await request<ApiEnvelope<BookingOrder>>(`/orders/${encodeURIComponent(orderReference)}/refund`, {
+    method: 'POST',
+    token,
   })
   return result.data
 }

@@ -1,3 +1,5 @@
+import type { Movie } from './movie'
+
 export type User = {
   id: number
   username: string
@@ -36,9 +38,25 @@ export type BookingOrder = {
   id: number
   reference: string
   status: 'paid' | 'refunded'
+  isUpcoming: boolean
+  isRefundable: boolean
   totalPrice: number
   paidAt: string
+  refundedAt: string | null
   cardLastFour: string
+  contact: { fullName: string; email: string; mobileNumber: string }
+  session: {
+    id: number
+    startsAt: string
+    date: string
+    time: string
+    price: number
+    hall: { id: number; name: string }
+    venue: { id: number; name: string; city: string }
+    format: { id: number; name: string }
+    language: { id: number; name: string }
+    movie: Movie
+  }
   tickets: {
     id: number
     seatCode: string

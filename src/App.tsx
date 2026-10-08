@@ -1,14 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import AccountPage from './components/AccountPage'
 import BookingDialog from './components/BookingDialog'
 import MovieDetailsPage from './components/MovieDetailsPage'
 import MovieGrid from './components/MovieGrid'
 import MovieSearch from './components/MovieSearch'
 import SessionsPage from './components/SessionsPage'
+import { getCurrentUser } from './services/booking'
 import { getFeaturedMovies, getNowPlayingMovies, searchMovies } from './services/movies'
+import { ApiError } from './types/booking'
+import type { User } from './types/booking'
 import type { Movie } from './types/movie'
 import type { Session } from './types/session'
 
-type View = 'home' | 'sessions' | 'details'
+type View = 'home' | 'sessions' | 'account' | 'details'
 
 type HomeContentState =
   | { status: 'loading' }
@@ -23,14 +27,43 @@ type SearchState =
 
 function App() {
   const [view, setView] = useState<View>(
-    window.location.pathname === '/sessions' ? 'sessions' : 'home',
+    window.location.pathname === '/sessions'
+      ? 'sessions'
+      : window.location.pathname === '/account' ? 'account' : 'home',
   )
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [selectedMovieSlug, setSelectedMovieSlug] = useState<string | null>(null)
   const [selectedBooking, setSelectedBooking] = useState<{ movie: Movie; session: Session } | null>(null)
   const [homeContent, setHomeContent] = useState<HomeContentState>({ status: 'loading' })
   const [searchQuery, setSearchQuery] = useState('')
   const [searchAttempt, setSearchAttempt] = useState(0)
   const [searchState, setSearchState] = useState<SearchState>({ status: 'idle' })
+
+  const handleUserChange = useCallback((user: User | null) => {
+    setCurrentUser(user)
+  }, [])
+
+  useEffect(() => {
+    const token = sessionStorage.getItem('kino-auth-token')
+    if (!token) return
+    let isCurrent = true
+    getCurrentUser(token)
+      .then((user) => {
+        if (isCurrent) setCurrentUser(user)
+      })
+      .catch((error: unknown) => {
+        if (!isCurrent) return
+        if (error instanceof ApiError && error.status === 401) {
+          sessionStorage.removeItem('kino-auth-token')
+          setCurrentUser(null)
+          return
+        }
+        console.error('Could not restore the signed-in user.', error)
+      })
+    return () => {
+      isCurrent = false
+    }
+  }, [])
 
   useEffect(() => {
     let isCurrent = true
@@ -114,13 +147,19 @@ function App() {
       window.history.pushState({}, '', '/')
     } else if (nextView === 'sessions' && window.location.pathname !== '/sessions') {
       window.history.pushState({}, '', '/sessions')
+    } else if (nextView === 'account' && window.location.pathname !== '/account') {
+      window.history.pushState({}, '', '/account')
     }
     setView(nextView)
   }
 
   useEffect(() => {
     function handlePopState() {
-      setView(window.location.pathname === '/sessions' ? 'sessions' : 'home')
+      setView(
+        window.location.pathname === '/sessions'
+          ? 'sessions'
+          : window.location.pathname === '/account' ? 'account' : 'home',
+      )
     }
 
     window.addEventListener('popstate', handlePopState)
@@ -136,16 +175,21 @@ function App() {
         </button>
 
         <nav className="nav" aria-label="Main navigation">
-          <button type="button" className={window.location.pathname !== '/sessions' ? 'nav-button active' : 'nav-button'} onClick={() => navigateTo('home')}>
+          <button type="button" className={view === 'home' || (view === 'details' && window.location.pathname !== '/sessions') ? 'nav-button active' : 'nav-button'} onClick={() => navigateTo('home')}>
             Home
           </button>
           <button type="button" className={window.location.pathname === '/sessions' ? 'nav-button active' : 'nav-button'} onClick={() => navigateTo('sessions')}>
             Sessions
           </button>
+          <button type="button" className={view === 'account' ? 'nav-button active' : 'nav-button'} onClick={() => navigateTo('account')}>
+            {currentUser ? 'My account' : 'Sign in'}
+          </button>
         </nav>
       </header>
 
-      {view === 'home' ? (
+      {view === 'account' ? (
+        <AccountPage key={currentUser?.id ?? 'guest'} user={currentUser} onUserChange={handleUserChange} />
+      ) : view === 'home' ? (
         <div className="home-page">
           <section className="hero" aria-labelledby="hero-title">
             <div className="hero-art" aria-hidden="true">
@@ -281,6 +325,7 @@ function App() {
           key={selectedBooking.session.id}
           movie={selectedBooking.movie}
           session={selectedBooking.session}
+          onUserChange={handleUserChange}
           onClose={() => setSelectedBooking(null)}
         />
       )}

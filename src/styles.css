@@ -1103,6 +1103,233 @@ img {
   color: #fca5a5;
 }
 
+.account-page {
+  max-width: 900px;
+  margin: 2rem auto 0;
+}
+
+.account-page > h1,
+.account-heading h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: -0.04em;
+}
+
+.account-intro,
+.account-heading > div > p:last-child {
+  color: #a6a8b2;
+}
+
+.account-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 520px;
+  margin-top: 1.5rem;
+}
+
+.account-form label {
+  display: grid;
+  gap: 0.4rem;
+  color: #d8d9e0;
+  font-size: 0.88rem;
+}
+
+.account-form input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  background: #0b0d16;
+  color: #f5f3f1;
+}
+
+.account-form input:focus-visible {
+  outline: 2px solid #f45132;
+  outline-offset: 2px;
+}
+
+.account-form label small {
+  color: #ff8a72;
+}
+
+.account-form > .primary-button {
+  justify-self: start;
+  padding: 0.75rem 1.2rem;
+}
+
+.account-switch {
+  color: #a6a8b2;
+}
+
+.account-heading,
+.account-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.account-heading .secondary-button {
+  padding: 0.65rem 1rem;
+}
+
+.account-profile,
+.account-tickets {
+  margin-top: 2rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  background: #11131d;
+}
+
+.account-section-heading h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.account-section-heading p {
+  margin: 0.25rem 0 0;
+  color: #9295a1;
+  font-size: 0.88rem;
+}
+
+.profile-status,
+.ticket-status {
+  padding: 0.32rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #d5d7df;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.profile-status.complete,
+.ticket-status {
+  border-color: rgba(90, 185, 130, 0.4);
+  color: #9ae6b4;
+}
+
+.profile-status.incomplete,
+.ticket-status.refunded {
+  border-color: rgba(244, 129, 80, 0.4);
+  color: #ffb18c;
+}
+
+.profile-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: none;
+}
+
+.profile-form > label:first-child {
+  grid-column: 1 / -1;
+}
+
+.profile-form > button {
+  grid-column: 1 / -1;
+}
+
+.account-tickets > .account-section-heading {
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+.ticket-tabs {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  background: #0b0d16;
+}
+
+.ticket-tab {
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #a6a8b2;
+  font-size: 0.82rem;
+}
+
+.ticket-tab.active {
+  background: #f45132;
+  color: #fff;
+}
+
+.ticket-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.ticket-card {
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  background: #0b0d16;
+}
+
+.ticket-card-heading,
+.ticket-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ticket-card-heading h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.ticket-reference {
+  margin: 0 0 0.2rem;
+  color: #9295a1;
+  font-size: 0.75rem;
+}
+
+.ticket-session-meta {
+  margin: 0.45rem 0 0;
+  color: #a6a8b2;
+  font-size: 0.84rem;
+}
+
+.ticket-seats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.ticket-seat {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: #d8d9e0;
+  font-size: 0.82rem;
+}
+
+.ticket-seat strong,
+.ticket-card-footer > span strong {
+  color: #ff8068;
+}
+
+.ticket-card-footer {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #d8d9e0;
+  font-size: 0.88rem;
+}
+
+.ticket-card-footer button:disabled {
+  cursor: not-allowed;
+  color: #777b88;
+}
+
 .showtime-option {
   appearance: none;
   cursor: pointer;
@@ -1699,6 +1926,34 @@ img {
 
   .booking-actions button {
     width: 100%;
+  }
+
+  .account-page {
+    margin-top: 1.25rem;
+  }
+
+  .account-heading,
+  .account-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profile-form {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-form > label:first-child,
+  .profile-form > button {
+    grid-column: auto;
+  }
+
+  .account-tickets > .account-section-heading {
+    align-items: flex-start;
+  }
+
+  .ticket-card-heading,
+  .ticket-card-footer {
+    align-items: flex-start;
   }
 }
 
